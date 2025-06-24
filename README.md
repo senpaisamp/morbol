@@ -7,7 +7,8 @@ Please note that defender is now pretty good at detecting go loaders, so don't e
 ## Setup
 
 ```
-GO111MODULE=off go get golang.org/x/sys/windows
+go mod init morbol
+go get golang.org/x/sys/windows@latest
 pip3 install donut-shellcode
 sudo apt-get install upx
 ```
